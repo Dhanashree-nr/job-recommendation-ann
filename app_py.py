@@ -7,10 +7,6 @@ Original file is located at
     https://colab.research.google.com/drive/1m7fbfwuXEpIA22IYdftPK_KiMvn1QL-w
 """
 
-!pip install streamlit
-
-
-
 import numpy as np
 import streamlit as st
 from sklearn.preprocessing import StandardScaler
