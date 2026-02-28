@@ -7,7 +7,7 @@ Original file is located at
     https://colab.research.google.com/drive/1usv3Xr10bqc5j41TWPMv-6__W7lOj3qK
 """
 
-streamlit
-numpy
-scikit-learn
-tensorflow
+streamlit==1.32.2
+numpy==1.26.4
+scikit-learn==1.4.2
+tensorflow==2.15.0
