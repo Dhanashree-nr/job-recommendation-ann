@@ -1,8 +1,5 @@
 import numpy as np
 import streamlit as st
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.utils import to_categorical
 
 # -------------------------------
 # Page Setup
@@ -11,7 +8,13 @@ st.set_page_config(page_title="Job Recommendation System", layout="centered")
 st.title("💼 Job Recommendation System using ANN")
 
 # -------------------------------
-# Training Dataset
+# Activation Function
+# -------------------------------
+def sigmoid(x):
+    return 1 / (1 + np.exp(-x))
+
+# -------------------------------
+# Training Data
 # Features: [coding, math, ml, web, experience, degree]
 # -------------------------------
 X = np.array([
@@ -25,40 +28,54 @@ X = np.array([
     [8, 9, 8, 3, 3, 1]
 ], dtype=float)
 
-# Normalize manually (0–1 range)
-X[:, :5] = X[:, :5] / 10.0
+# Normalize (0–1)
+X[:, :5] /= 10
 
-y = np.array([0, 1, 2, 3, 2, 1, 2, 3])
-y = to_categorical(y)
-
-# -------------------------------
-# ANN Model
-# -------------------------------
-model = Sequential([
-    Dense(16, activation='relu', input_shape=(6,)),
-    Dense(8, activation='relu'),
-    Dense(4, activation='softmax')
+# Job labels
+y = np.array([
+    [1,0,0,0],  # Software Dev
+    [0,1,0,0],  # Data Scientist
+    [0,0,1,0],  # Web Dev
+    [0,0,0,1],  # AI/ML Engineer
+    [0,0,1,0],
+    [0,1,0,0],
+    [0,0,1,0],
+    [0,0,0,1]
 ])
 
-model.compile(
-    optimizer='adam',
-    loss='categorical_crossentropy',
-    metrics=['accuracy']
-)
+# -------------------------------
+# Initialize Weights
+# -------------------------------
+np.random.seed(1)
+W1 = np.random.randn(6, 8)
+W2 = np.random.randn(8, 4)
 
-model.fit(X, y, epochs=200, verbose=0)
+# -------------------------------
+# Train ANN (Backpropagation)
+# -------------------------------
+lr = 0.1
+for _ in range(3000):
+    h = sigmoid(np.dot(X, W1))
+    o = sigmoid(np.dot(h, W2))
+
+    error = y - o
+    d2 = error * o * (1 - o)
+    d1 = d2.dot(W2.T) * h * (1 - h)
+
+    W2 += h.T.dot(d2) * lr
+    W1 += X.T.dot(d1) * lr
 
 # -------------------------------
 # User Input
 # -------------------------------
 st.subheader("🔹 Enter Your Skills")
 
-coding = st.slider("Coding Skill (0–10)", 0, 10, 5)
-math = st.slider("Math Skill (0–10)", 0, 10, 5)
-ml = st.slider("Machine Learning Knowledge (0–10)", 0, 10, 5)
-web = st.slider("Web Development Knowledge (0–10)", 0, 10, 5)
+coding = st.slider("Coding Skill", 0, 10, 5)
+math = st.slider("Math Skill", 0, 10, 5)
+ml = st.slider("ML Knowledge", 0, 10, 5)
+web = st.slider("Web Knowledge", 0, 10, 5)
 exp = st.slider("Experience (Years)", 0, 10, 1)
-degree = st.selectbox("Degree Background", ["Non-CS", "CS / IT"])
+degree = st.selectbox("Degree", ["Non-CS", "CS / IT"])
 
 degree = 1 if degree == "CS / IT" else 0
 
@@ -66,11 +83,13 @@ degree = 1 if degree == "CS / IT" else 0
 # Prediction
 # -------------------------------
 if st.button("🔍 Recommend Job"):
-    user_input = np.array([[coding, math, ml, web, exp, degree]], dtype=float)
-    user_input[:, :5] = user_input[:, :5] / 10.0
+    user = np.array([[coding, math, ml, web, exp, degree]], dtype=float)
+    user[:, :5] /= 10
 
-    prediction = model.predict(user_input)
-    job_index = np.argmax(prediction)
+    hidden = sigmoid(np.dot(user, W1))
+    output = sigmoid(np.dot(hidden, W2))
+
+    job_index = np.argmax(output)
 
     jobs = [
         "Software Developer",
@@ -82,4 +101,4 @@ if st.button("🔍 Recommend Job"):
     st.success(f"✅ Recommended Job Role: **{jobs[job_index]}**")
 
 st.markdown("---")
-st.caption("Mini Project | Artificial Neural Network | Streamlit Cloud")
+st.caption("Mini Project | ANN from Scratch | Streamlit Cloud")
